@@ -1,4 +1,3 @@
-
 /* Generated using ergoc version 0.20.7 */
 'use strict';
 /*eslint-disable no-unused-vars*/
