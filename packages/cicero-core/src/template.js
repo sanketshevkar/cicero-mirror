@@ -179,7 +179,7 @@ class Template {
      * from the keystore
      * @param {string} [keyStorePath] - path of the keystore to be used
      * @param {string} [keyStorePassword] - password for the keystore file
-     * @return {object} - object containing signers metadata, templateHash, timestamp, signatory's certificate, signature
+     * @return {object} - object containing signers metadata, timestamp, signatory's certificate, signature
      */
     signTemplate(keyStorePath, keyStorePassword) {
         const timeStamp = Date.now();
@@ -207,7 +207,6 @@ class Template {
         const signature = sign.sign(privateKey, 'hex');
         const signatureObject = {
             signatoryInfo: subjectAttributes,
-            templateHash: templateHash,
             timeStamp: timeStamp,
             signatoryCert: certificatePem,
             signature: signature
@@ -222,10 +221,9 @@ class Template {
      */
     verifySignatures(signaturesObject) {
         const templateSignature = signaturesObject.signatures.templateSignature;
-        const contractSignatures = signaturesObject.signatures.contractSignatures;
-        const templatehash = this.getHash();
+        const templateHash = this.getHash();
 
-        const { signatoryInfo, templateHash, timeStamp, signatoryCert, signature } = templateSignature;
+        const { signatoryInfo, timeStamp, signatoryCert, signature } = templateSignature;
         //X509 cert converted from PEM to forge type
         const certificateForge = forge.pki.certificateFromPem(signatoryCert);
         //public key in forge typenode index.js sign acme 123 helloworldstate
@@ -236,83 +234,24 @@ class Template {
         const publicKey = crypto.createPublicKey(publicKeyPem);
         //signature verification process
         const verify = crypto.createVerify('SHA256');
-        verify.write(templatehash + timeStamp);
+        verify.write(templateHash + timeStamp);
         verify.end();
         const result = verify.verify(publicKey, signature, 'hex');
         if (!result) {
             const returnObject = {
                 status: 'Failed',
-                msg: `Invalid Signature of template author ${signatoryInfo[3].value}`
+                msg: `Invalid Signature of template author`
             };
     
             return returnObject;
-        } else {
-            console.log(`Signature verified for template author ${signatoryInfo[3].value}`);
         }
 
-        for (let i = 0; i < contractSignatures.length; i++) {
-            const { signatoryInfo, templateHash, timeStamp, signatoryCert, signature } = templateSignature;
-            //X509 cert converted from PEM to forge type
-            const certificateForge = forge.pki.certificateFromPem(signatoryCert);
-            //public key in forge type
-            const publicKeyForge = certificateForge.publicKey;
-            //convert public key from forge to pem
-            const publicKeyPem = forge.pki.publicKeyToPem(publicKeyForge);
-            //convert public key in pem to public key type in node.
-            const publicKey = crypto.createPublicKey(publicKeyPem);
-            //signature verification process
-            const verify = crypto.createVerify('SHA256');
-            verify.write(templatehash + timeStamp);
-            verify.end();
-            const result = verify.verify(publicKey, signature, 'hex');
-            if (!result) {
-                const returnObject = {
-                    status: 'Failed',
-                    msg: `Invalid Signature of template author ${signatoryInfo[1].value}`
-                };
-        
-                return returnObject;
-            } else {
-                console.log(`Signature verified for party ${signatoryInfo[1].value}`);
-            }
-        }
         const returnObject = {
             status: 'Success',
-            msg: 'Template and Contract Signatures Verified Successfully.'
+            msg: 'Template Author Signature Verified Successfully.'
         };
 
         return returnObject;
-    }
-
-
-    /**
-     * Persists this template to a Cicero Template Archive (cta) file.
-     * @param {string} [contractPath] - path of the contract directory
-     * @param {string} [keyStorePath] - path of the keystore
-     * @param {string} [keyStorePassword] - password of the keystore
-     * @return {object} object containing signature data and a string message
-     */
-    async signContract(contractPath, keyStorePath, keyStorePassword) {
-        const signatureObject = this.signTemplate(keyStorePath, keyStorePassword);
-        const signaturesString = fs.readFileSync(`${contractPath}/signatures.json`);
-        const signaturesObject = JSON.parse(signaturesString);
-        console.log(signaturesObject.templateSignature)
-        const contractSignatures = signaturesObject.signatures.contractSignatures.concat(signatureObject);
-        console.log(signaturesObject.templateSignature)
-        const newSignaturesObject = {
-            signatures: {
-                templateSignature: signaturesObject.signatures.templateSignature,
-                contractSignatures: contractSignatures
-            }
-        }
-        const signatureData = JSON.stringify(newSignaturesObject);
-        fs.writeFileSync(`${contractPath}/signatures.json`, signatureData);
-        const returnObject = {
-            contractSignature: signatureObject,
-            msg: 'signature successfully added to signatures.json',
-        }
-
-        return returnObject
     }
 
     /**

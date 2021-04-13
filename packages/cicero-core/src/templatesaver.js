@@ -47,8 +47,7 @@ class TemplateSaver {
 
         let templateSignatures = {
             signatures: {
-                templateSignature: signatureObject,
-                contractSignatures: []
+                templateSignature: signatureObject
             }
         };
         const templateSignString =  JSON.stringify(templateSignatures);
