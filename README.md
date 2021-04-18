@@ -1,3 +1,7 @@
+# This is a mirror repo of the fork for cicero. This is a part of my GSOC 2021 proposal. To see the changes made to this repo in action, visit [this repository](https://github.com/sanketshevkar/TemplateContractSigning). You can view the latest commits on this mirror repo to see the changes made to add template signing as well as contract signing features. Also, the proposal gives a deailed explanation for these changes made.
+
+
+
 <p align="center">
   <a href="https://www.accordproject.org/projects/cicero">
     <img src="./cicero.png" alt="Cicero logo">
